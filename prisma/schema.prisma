@@ -1,0 +1,92 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model Client {
+  id          String  @id @default(auto()) @map("_id") @db.ObjectId
+  email       String  @unique
+  name        String
+  cpf         String  @unique
+  telefone    String?
+  rua         String?
+  complemento String?
+  cidade      String?
+  pets        Pet[]
+  appointments Appointment[]
+
+  MedicalRecord MedicalRecord[]
+}
+
+model Pet {
+  id      String @id @default(auto()) @map("_id") @db.ObjectId
+  name    String
+  species String
+  breed   String
+  age     Int
+  ownerId String @db.ObjectId
+  owner   Client @relation(fields: [ownerId], references: [id]) // Relacionamento com o cliente
+  appointments Appointment[]
+
+  MedicalRecord MedicalRecord[]
+}
+
+model Appointment {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  date      DateTime
+  service   String
+  clientId  String   @db.ObjectId
+  petId     String   @db.ObjectId
+  clientName String? @default("")
+  petName    String? // Novo campo para o nome do pet
+  client    Client   @relation(fields: [clientId], references: [id])
+  pet       Pet      @relation(fields: [petId], references: [id])
+}
+
+model User {
+  id       String   @id @default(auto()) @map("_id") @db.ObjectId
+  name     String
+  email    String   @unique
+  password String
+  role     Role     
+  crm      String?  // Apenas para veterinários (opcional para outros)
+  createdAt DateTime @default(now())
+
+  MedicalRecord MedicalRecord[]
+}
+
+enum Role {
+  ADMIN        
+  VETERINARIO
+  ATENDENTE    
+  TOSADOR      
+  BANHISTA     
+}
+
+model MedicalRecord {
+  id       String   @id @default(auto()) @map("_id") @db.ObjectId
+  petId    String   @db.ObjectId
+  pet      Pet      @relation(fields: [petId], references: [id]) // Relacionamento com o Pet
+  petName  String   // Nome do pet para relatórios
+
+  ownerId  String   @db.ObjectId
+  owner    Client   @relation(fields: [ownerId], references: [id]) // Relacionamento com o Cliente
+  ownerName String  // Nome do proprietário para relatórios
+
+  vetId    String   @db.ObjectId
+  vet      User     @relation(fields: [vetId], references: [id]) // Relacionamento com o Veterinário
+
+  type        String   // Tipo do registro (Consulta, Vacina, etc.)
+  description String   // Descrição do procedimento
+  date        DateTime @default(now())
+}
