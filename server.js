@@ -6,6 +6,12 @@ import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
 dotenv.config();
 
+// Garante que o servidor nunca suba assinando tokens com um secret indefinido
+if (!process.env.JWT_SECRET) {
+    console.error('ERRO: JWT_SECRET não definido no .env');
+    process.exit(1);
+}
+
 const prisma = new PrismaClient()
 
 const app = express()
@@ -281,6 +287,12 @@ app.put('/appointments/:id', async (req, res) => {
   app.post('/users/register', async (req, res) => {
     const { name, email, password, role, crm } = req.body;
 
+    // ADMIN não pode ser criado pela API pública (apenas via seed/banco)
+    const allowedRoles = ['VETERINARIO', 'ATENDENTE', 'TOSADOR', 'BANHISTA'];
+    if (!allowedRoles.includes(role)) {
+        return res.status(400).json({ message: 'Perfil inválido.' });
+    }
+
     try {
         const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -292,12 +304,21 @@ app.put('/appointments/:id', async (req, res) => {
                 role,
                 ...(role === 'VETERINARIO' && { crm }),
             },
+            // select garante que o hash da senha nunca sai na resposta
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+                crm: true,
+                createdAt: true,
+            },
         });
 
         res.status(201).json({ message: 'Usuário criado com sucesso!', user: newUser });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Erro ao criar usuário', error });
+        console.error('Erro ao criar usuário:', error);
+        res.status(500).json({ message: 'Erro ao criar usuário' });
     }
 });
 
@@ -323,7 +344,7 @@ app.post('/users/login', async (req, res) => {
 
         const token = jwt.sign(
             { userId: user.id, role: user.role },
-            'JWT_SECRET', // Substitua pelo valor da variável de ambiente
+            process.env.JWT_SECRET,
             { expiresIn: '1h' }
         );
 
@@ -366,7 +387,7 @@ app.get('/users', async (req, res) => {
           name,
           email,
           role,
-          crm: role === 'VETERINARIAN' ? crm : null, // Apenas veterinários têm CRM
+          crm: role === 'VETERINARIO' ? crm : null, // Apenas veterinários têm CRM
         },
       });
   

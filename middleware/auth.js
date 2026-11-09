@@ -1,3 +1,8 @@
+import jwt from 'jsonwebtoken';
+
+// Middleware de autenticação por JWT.
+// Uso: app.get('/rota', authenticate(), handler)
+// Com restrição de perfil: app.get('/rota', authenticate(['ADMIN']), handler)
 const authenticate = (roles = []) => (req, res, next) => {
     const token = req.headers.authorization?.split(' ')[1];
 
@@ -6,7 +11,7 @@ const authenticate = (roles = []) => (req, res, next) => {
     }
 
     try {
-        const decoded = jwt.verify(token, JWT_SECRET);
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
         req.user = decoded;
 
         if (roles.length && !roles.includes(decoded.role)) {
@@ -18,3 +23,5 @@ const authenticate = (roles = []) => (req, res, next) => {
         res.status(401).json({ message: 'Token inválido' });
     }
 };
+
+export default authenticate;
