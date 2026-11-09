@@ -2,17 +2,6 @@
 
 Aplicação full-stack para o dia a dia de uma clínica veterinária: cadastro de clientes e pets, agendamento de consultas, prontuário médico e gestão de usuários por perfil de acesso.
 
-> 🚧 **Demo online:** em breve (deploy em andamento — Vercel + Railway)
-
-## 📸 Screenshots
-
-<!-- Adicione os prints em docs/screenshots/ e descomente as linhas abaixo -->
-<!-- ![Tela de clientes](docs/screenshots/clientes.png) -->
-<!-- ![Agendamento de consultas](docs/screenshots/agendamentos.png) -->
-<!-- ![Dashboard](docs/screenshots/dashboard.png) -->
-
-*Em breve.*
-
 ## ✨ Funcionalidades
 
 - **Clientes e pets** — CRUD completo, com busca por nome (autocomplete) e vínculo de múltiplos pets por cliente
